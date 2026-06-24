@@ -18,6 +18,9 @@ struct ContentView: View {
     // --- Slider state ---
     @State private var age: Double = 25 // Default starting age
     
+    // --- Background color toggle ---
+        @State private var isYellowBackground = false
+    
     // Date formatter
     private var formattedDate: String {
         let formatter = DateFormatter()
@@ -30,6 +33,19 @@ struct ContentView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 25) {
+                    
+                    // --- Background Toggle Card ---
+                    CardView(title: "Background Color") {
+                        Toggle(isOn: $isYellowBackground) {
+                            Text("Yellow Background")
+                                .font(.headline)
+                            }
+                            .tint(.yellow)
+                                            
+                        Text(isYellowBackground ? "Background: Yellow" : "Background: Default")
+                            .foregroundColor(isYellowBackground ? .orange : .gray)
+                                .font(.subheadline)
+                    }
                     
                     // --- Date Picker Card ---
                     CardView(title: "Select a Date") {
@@ -74,7 +90,8 @@ struct ContentView: View {
                 .padding()
             }
             .navigationTitle("Profile Preferences")
-            .background(Color(.systemGroupedBackground))
+            .background(isYellowBackground ? Color.yellow.opacity(0.3) : Color(.systemGroupedBackground))
+                        .animation(.easeInOut(duration: 0.3), value: isYellowBackground)
         }
     }
 }
