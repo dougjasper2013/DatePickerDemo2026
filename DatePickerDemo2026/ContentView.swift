@@ -34,6 +34,20 @@ struct ContentView: View {
     @State private var selectedTopping = 0
     @State private var pizzaOrderSummary = ""
     
+    private let pizzaCategories = ["Vegetarian", "Meat", "Specialty"]
+    private let pizzaOptionsDict: [String: [String]] = [
+            "Vegetarian": ["Margherita", "Veggie Delight", "Spinach & Feta"],
+            "Meat": ["Meat Lovers", "Pepperoni", "BBQ Chicken"],
+            "Specialty": ["Hawaiian", "Canadian", "Four Seasons"]
+        ]
+    
+    @State private var selectedCategory = 0
+    @State private var selectedOption = 0
+    @State private var dependentOrderSummary = ""
+    
+    @State private var longPressActive = false
+    @State private var longPressMessage = ""
+    
     // Date formatter
     private var formattedDate: String {
         let formatter = DateFormatter()
@@ -167,6 +181,88 @@ struct ContentView: View {
                                 .padding(.top, 5)
                         }
                     }
+                    
+                    // MARK: - Dependent Pizza Picker Card
+                                        CardView(title: "Dependent Pizza Picker") {
+                                            Text("Select a category and pizza option")
+                                                .font(.headline)
+                                            
+                                            HStack(spacing: 0) {
+                                                Picker("Category", selection: $selectedCategory) {
+                                                    ForEach(0..<pizzaCategories.count, id: \.self) { index in
+                                                        Text(pizzaCategories[index]).tag(index)
+                                                    }
+                                                }
+                                                .pickerStyle(.wheel)
+                                                .frame(maxWidth: .infinity, maxHeight: 120)
+                                                .clipped()
+                                                .onChange(of: selectedCategory) { _ in
+                                                    selectedOption = 0 // reset dependent picker
+                                                }
+                                                
+                                                Picker("Option", selection: $selectedOption) {
+                                                    ForEach(0..<(pizzaOptionsDict[pizzaCategories[selectedCategory]]?.count ?? 0), id: \.self) { index in
+                                                        Text(pizzaOptionsDict[pizzaCategories[selectedCategory]]![index])
+                                                    }
+                                                }
+                                                .pickerStyle(.wheel)
+                                                .frame(maxWidth: .infinity, maxHeight: 120)
+                                                .clipped()
+                                            }
+                                            .frame(height: 120)
+                                            
+                                            Button(action: placeDependentOrder) {
+                                                Text("Place Dependent Order")
+                                                    .font(.headline)
+                                                    .foregroundColor(.white)
+                                                    .padding()
+                                                    .frame(maxWidth: .infinity)
+                                                    .background(Color.green)
+                                                    .cornerRadius(12)
+                                            }
+                                            .padding(.top, 10)
+                                            
+                                            if !dependentOrderSummary.isEmpty {
+                                                Text(dependentOrderSummary)
+                                                    .font(.headline)
+                                                    .multilineTextAlignment(.center)
+                                                    .foregroundColor(.green)
+                                                    .padding(.top, 5)
+                                            }
+                                        }
+                    
+                    // MARK: - Long Press Gesture Card
+                    CardView(title: "Long Press Gesture") {
+                        Text(longPressMessage.isEmpty ? "Long press the box below" : longPressMessage)
+                            .font(.headline)
+                            .foregroundColor(.purple)
+                            .multilineTextAlignment(.center)
+                            .padding(.bottom, 10)
+                        
+                        Rectangle()
+                            .fill(longPressActive ? Color.orange : Color.gray.opacity(0.5))
+                            .frame(height: 100)
+                            .cornerRadius(12)
+                            .overlay(
+                                Text("Hold me")
+                                    .foregroundColor(.white)
+                                    .bold()
+                            )
+                            .gesture(
+                                LongPressGesture(minimumDuration: 1.0) // 1-second press
+                                    .onChanged { _ in
+                                        longPressActive = true
+                                        longPressMessage = "Pressing..."
+                                    }
+                                    .onEnded { _ in
+                                        longPressActive = false
+                                        longPressMessage = "Long press detected!"
+                                    }
+                            )
+                    }
+                                        Spacer()
+                    
+                    
                 }
                 .padding()
             }
@@ -226,6 +322,13 @@ struct ContentView: View {
             let topping = toppings[selectedTopping]
             
             pizzaOrderSummary = "You ordered a \(crust) crust pizza with \(sauce) sauce and \(topping) toppings."
+        }
+    
+    //MARK: - Dependant Pizza Order Function
+    private func placeDependentOrder() {
+            let category = pizzaCategories[selectedCategory]
+            let option = pizzaOptionsDict[category]![selectedOption]
+            dependentOrderSummary = "You selected a \(option) pizza from the \(category) category."
         }
 }
 
